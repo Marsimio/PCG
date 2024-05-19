@@ -14,25 +14,16 @@ public class Road : MonoBehaviour
 
     private void Start()
     {
-        InitializeRoad();
         CreateRoad();
     }
 
-    private void InitializeRoad()
-    {
-        roadObject = new GameObject("Road");
-        roadObject.transform.SetParent(this.transform, false);
-        roadObject.transform.localPosition = Vector3.zero;
-        roadObject.transform.localRotation = Quaternion.identity;
-        roadObject.transform.localScale = Vector3.one;
-    }
 
 
     private void CreateRoad()
     {
 
         GameObject cube = new GameObject();
-        cube.name = "Ground";
+        cube.name = "Road";
 
         Cube cubeScript = cube.AddComponent<Cube>();
         cubeScript.UpdateSubmeshCount(1);
