@@ -7,7 +7,7 @@ public class CitySpawner : MonoBehaviour
     public int columns = 10;
     public float spacing = 200;
 
-    public GameObject playerPrefab; // Reference to a player prefab
+    public GameObject playerPrefab;
     private GameObject player;
     private Vector3 startPosition;
     private Vector3 endPosition;
@@ -23,7 +23,6 @@ public class CitySpawner : MonoBehaviour
         if (player != null && Vector3.Distance(player.transform.position, endPosition) < spacing)
         {
             GenerateLevel();
-            player.transform.position = startPosition;
         }
     }
 
@@ -33,6 +32,7 @@ public class CitySpawner : MonoBehaviour
         {
             player = new GameObject("Player");
             player.AddComponent<PlayerMovement>();
+            player.transform.position = startPosition;
         }
         else
         {

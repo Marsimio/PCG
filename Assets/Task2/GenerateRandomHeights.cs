@@ -1,6 +1,5 @@
 using System.Collections;
 using System.Collections.Generic;
-using System.Linq;
 using UnityEngine;
 
 [System.Serializable]
@@ -18,6 +17,14 @@ public class TreeData
     public float minHeight;
     public float maxHeight;
 }
+
+[System.Serializable]
+public class FogData
+{
+    public Color fogColor;
+    public float fogDensity;
+}
+
 public class GenerateRandomHeights : MonoBehaviour
 {
     private Terrain terrain;
@@ -55,6 +62,12 @@ public class GenerateRandomHeights : MonoBehaviour
 
     [SerializeField] private int terrainLayerIndex;
 
+    [SerializeField] private FogData fogData;
+
+    [SerializeField] private bool addFog = true;
+
+    private GameObject player;
+
     private void Start()
     {
         if(terrainData == null) {
@@ -67,11 +80,9 @@ public class GenerateRandomHeights : MonoBehaviour
         }
         GenerateHeights();
         addTerrainTextures();
-        AddTrees();
-    }
-
-    private void Update()
-    {
+        AddEnviorments();
+        AddFog();
+        CreatePlayer();
     }
 
     void GenerateHeights()
@@ -186,11 +197,11 @@ public class GenerateRandomHeights : MonoBehaviour
         }
     }
 
-    private void AddTrees()
+    private void AddEnviorments()
     {
         TreePrototype[] trees = new TreePrototype[treeData.Count];
 
-        for(int i = 0; i < treeData.Count; i++)
+        for (int i = 0; i < treeData.Count; i++)
         {
             trees[i] = new TreePrototype();
             trees[i].prefab = treeData[i].treeMesh;
@@ -200,32 +211,32 @@ public class GenerateRandomHeights : MonoBehaviour
 
         List<TreeInstance> treeInstanceList = new List<TreeInstance>();
 
-        if(addTrees)
+        if (addTrees)
         {
-            for(int z = 0; z < terrainData.size.z; z+= treeSpacing)
+            for (int z = 0; z < terrainData.size.z; z += treeSpacing)
             {
-                for(int x = 0; x < terrainData.size.x; x += treeSpacing)
+                for (int x = 0; x < terrainData.size.x; x += treeSpacing)
                 {
-                    for(int treeIndex = 0; treeIndex < trees.Length; treeIndex++)
+                    for (int treeIndex = 0; treeIndex < trees.Length; treeIndex++)
                     {
-                        if(treeInstanceList.Count < maxTrees)
+                        if (treeInstanceList.Count < maxTrees)
                         {
-                            float normalizedX = (float)x / terrainData.size.x;
-                            float normalizedZ = (float)z / terrainData.size.z;
+                            float normalizedX = x / terrainData.size.x;
+                            float normalizedZ = z / terrainData.size.z;
                             float currentHeight = terrainData.GetHeight((int)(normalizedX * terrainData.heightmapResolution), (int)(normalizedZ * terrainData.heightmapResolution)) / terrainData.size.y;
 
                             if (currentHeight >= treeData[treeIndex].minHeight && currentHeight <= treeData[treeIndex].maxHeight)
                             {
-                                float randomX = (x + Random.Range(-5.0f, 5.0f))/ terrainData.size.x;
+                                float randomX = (x + Random.Range(-5.0f, 5.0f)) / terrainData.size.x;
                                 float randomZ = (z + Random.Range(-5.0f, 5.0f)) / terrainData.size.z;
 
-                                Vector3 treePosition = new Vector3(randomX* terrainData.size.x, currentHeight* terrainData.size.y, randomZ* terrainData.size.z)+ this.transform.position;
+                                Vector3 treePosition = new Vector3(randomX * terrainData.size.x, currentHeight * terrainData.size.y, randomZ * terrainData.size.z) + this.transform.position;
 
                                 RaycastHit raycastHit;
 
                                 int layerMask = 1 << terrainLayerIndex;
 
-                                if(Physics.Raycast(treePosition, -Vector3.up, out raycastHit, 100, layerMask) || Physics.Raycast(treePosition, Vector3.up, out raycastHit, 100, layerMask))
+                                if (Physics.Raycast(treePosition, -Vector3.up, out raycastHit, 100, layerMask) || Physics.Raycast(treePosition, Vector3.up, out raycastHit, 100, layerMask))
                                 {
 
                                     float treeDistance = (raycastHit.point.y - this.transform.position.y) / terrainData.size.y;
@@ -248,6 +259,14 @@ public class GenerateRandomHeights : MonoBehaviour
         }
         terrainData.treeInstances = treeInstanceList.ToArray();
     }
+    private void AddFog()
+    {
+        if (!addFog) return;
+
+        RenderSettings.fog = true;
+        RenderSettings.fogColor = fogData.fogColor;
+        RenderSettings.fogDensity = fogData.fogDensity;
+    }
 
     private void OnDestroy()
     {
@@ -257,5 +276,30 @@ public class GenerateRandomHeights : MonoBehaviour
         }
     }
 
+    void CreatePlayer()
+    {
+        if (player == null)
+        {
+            player = new GameObject("Player");
+            PlayerMovement playerController = player.AddComponent<PlayerMovement>();
 
+            Vector3 randomPosition = new Vector3(
+                Random.Range(0, terrainData.size.x),
+                200,
+                Random.Range(0, terrainData.size.z)
+            );
+
+            player.transform.position = randomPosition + transform.position;
+        }
+        else
+        {
+            Vector3 randomPosition = new Vector3(
+                Random.Range(0, terrainData.size.x),
+                200,
+                Random.Range(0, terrainData.size.z)
+            );
+
+            player.transform.position = randomPosition + transform.position;
+        }
+    }
 }
